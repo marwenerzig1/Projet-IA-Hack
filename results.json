@@ -2,7 +2,7 @@
   "teams": [
     {
       "name": "Ahmed",
-      "accuracy": 0.99,
+      "accuracy": 99,
       "precision": 0.89,
       "recall": 0.87,
       "f1_score": 0.88,
@@ -10,14 +10,14 @@
     },
     {
       "name": "Marwen",
-      "accuracy": 870000,
+      "accuracy": 87,
       "precision": 0.92,
       "recall": 0.90,
       "f1_score": 0.91,
       "last_update": "2026-04-06 16:35"
     },
     {
-      "name": "Marwen",
+      "name": "Marwenss",
       "accuracy": 20,
       "precision": 0.92,
       "recall": 0.90,
@@ -25,24 +25,24 @@
       "last_update": "2026-04-06 16:35"
     },
     {
-      "name": "Oumeima",
-      "accuracy": 50,
+      "name": "Oumeimasszd",
+      "accuracy": 500000,
       "precision": 0.87,
       "recall": 0.85,
       "f1_score": 0.86,
       "last_update": "2026-04-06 16:40"
     },
     {
-      "name": "Ahmed",
-      "accuracy": 15000,
+      "name": "Ahmedregg",
+      "accuracy": 1000,
       "precision": 0.89,
       "recall": 0.87,
       "f1_score": 0.88,
       "last_update": "2026-04-06 16:30"
     },
     {
-      "name": "Oumeima",
-      "accuracy": 999,
+      "name": "Oumeimallj",
+      "accuracy": 9000000,
       "precision": 0.87,
       "recall": 0.85,
       "f1_score": 0.86,

@@ -6,10 +6,15 @@ import base64
 
 st.set_page_config(page_title="Leaderboard IA", layout="wide")
 
-
 # ---------------- SESSION MEMORY ----------------
 if "previous_ranks" not in st.session_state:
     st.session_state.previous_ranks = {}
+
+if "last_alert" not in st.session_state:
+    st.session_state.last_alert = None
+
+if "alert_time" not in st.session_state:
+    st.session_state.alert_time = 0
 
 # ---------------- UTILS ----------------
 def get_base64(image_file):
@@ -23,7 +28,6 @@ def set_bg(image_file):
 
     st.markdown(f"""
     <style>
-
     @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500;700&display=swap');
 
     .stApp {{
@@ -39,20 +43,17 @@ def set_bg(image_file):
         padding-top: 60px;
     }}
 
-    /* TITLE */
     .title {{
         text-align: center;
         font-family: 'Orbitron', sans-serif;
         font-size: 48px;
         color: #00eaff;
         margin-bottom: 40px;
-
         text-shadow:
             0 0 5px #00eaff,
             0 0 10px #00eaff,
             0 0 20px #00eaff,
             0 0 40px #00eaff;
-
         animation: glowPulse 2s infinite alternate, float 4s ease-in-out infinite;
     }}
 
@@ -78,8 +79,12 @@ def set_bg(image_file):
         100% {{ transform: translateY(0px); }}
     }}
 
+    @keyframes zoomAlert {{
+        0% {{ transform: scale(1); }}
+        50% {{ transform: scale(1.22); }}
+        100% {{ transform: scale(1); }}
+    }}
 
-    /* TABLE */
     .custom-table {{
         width: 100%;
         border-collapse: collapse;
@@ -107,7 +112,7 @@ def set_bg(image_file):
         background: rgba(0,255,255,0.08);
     }}
 
-        .gold {{
+    .gold {{
         background: rgba(255, 215, 0, 0.1);
         box-shadow: 0 0 12px rgba(255,215,0,0.5);
     }}
@@ -120,7 +125,48 @@ def set_bg(image_file):
         background: rgba(205, 127, 50, 0.1);
     }}
 
-    /* LOGOS */
+    .rank-alert-overlay {{
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        background: rgba(0, 0, 20, 0.60);
+        backdrop-filter: blur(8px);
+        z-index: 99999;
+    }}
+
+    .rank-alert-text {{
+        font-family: 'Orbitron', sans-serif;
+        font-size: 86px;
+        font-weight: 700;
+        color: #00eaff;
+        text-align: center;
+        line-height: 1.2;
+        text-shadow:
+            0 0 10px #00eaff,
+            0 0 20px #00eaff,
+            0 0 40px #00eaff,
+            0 0 80px #00eaff;
+        animation: glowPulse 1.2s infinite alternate, zoomAlert 0.85s ease-in-out infinite;
+    }}
+
+    .rank-alert-sub {{
+        margin-top: 20px;
+        font-family: 'Orbitron', sans-serif;
+        font-size: 36px;
+        color: white;
+        text-align: center;
+        text-shadow:
+            0 0 5px #00eaff,
+            0 0 10px #00eaff,
+            0 0 20px #00eaff;
+    }}
+
     .logo-container {{
         position: fixed;
         bottom: 20px;
@@ -141,8 +187,7 @@ def set_bg(image_file):
 
     #tt {{
         height: 140px;
-     }}
-
+    }}
     </style>
     """, unsafe_allow_html=True)
 
@@ -162,7 +207,26 @@ st.markdown(f"""
 </div>
 """, unsafe_allow_html=True)
 
-# ---------------- TABLE ----------------
+# ---------------- ALERT ----------------
+def render_alert(alert_placeholder, alert_data):
+    if not alert_data:
+        alert_placeholder.empty()
+        return
+
+    name = alert_data["name"]
+    direction = alert_data["direction"]
+    old_rank = alert_data["old_rank"]
+    new_rank = alert_data["new_rank"]
+
+    main_text = f" {name} MOVED UP!" if direction == "up" else f" {name} MOVED DOWN!"
+    sub_text = f"Rank {old_rank} → {new_rank}"
+
+    alert_placeholder.markdown(f"""
+    <div class="rank-alert-overlay">
+        <div class="rank-alert-text">{main_text}</div>
+        <div class="rank-alert-sub">{sub_text}</div>
+    </div>
+    """, unsafe_allow_html=True)
 
 # ---------------- TABLE ----------------
 def render_table(df):
@@ -174,25 +238,36 @@ def render_table(df):
     html += "</tr></thead><tbody>"
 
     rank_changed = False
+    alert_data = None
 
     for _, row in df.iterrows():
         name = row["name"]
         current_rank = row["Rank"]
-
         prev_rank = st.session_state.previous_ranks.get(name)
-
         row_class = ""
 
-        # DETECT CHANGE
         if prev_rank is not None:
             if current_rank < prev_rank:
+                rank_changed = True
                 row_class = "rank-up"
-                rank_changed = True
+                if alert_data is None:
+                    alert_data = {
+                        "name": name,
+                        "direction": "up",
+                        "old_rank": prev_rank,
+                        "new_rank": current_rank
+                    }
             elif current_rank > prev_rank:
-                row_class = "rank-down"
                 rank_changed = True
+                row_class = "rank-down"
+                if alert_data is None:
+                    alert_data = {
+                        "name": name,
+                        "direction": "down",
+                        "old_rank": prev_rank,
+                        "new_rank": current_rank
+                    }
 
-        # TOP 3 STYLE
         if current_rank == 1:
             row_class += " gold"
         elif current_rank == 2:
@@ -201,40 +276,42 @@ def render_table(df):
             row_class += " bronze"
 
         html += f"<tr class='{row_class}'>"
-
         for val in row:
             html += f"<td>{val}</td>"
-
         html += "</tr>"
 
         st.session_state.previous_ranks[name] = current_rank
 
     html += "</tbody></table>"
-
-    st.markdown(html, unsafe_allow_html=True)
-
-    return rank_changed
+    return html, rank_changed, alert_data
 
 # ---------------- DATA ----------------
 def load_data():
     with open("results.json", "r") as f:
         return json.load(f)
 
-placeholder = st.empty()
+table_placeholder = st.empty()
+alert_placeholder = st.empty()
 
 # ---------------- LOOP ----------------
 while True:
     data = load_data()
-
     df = pd.DataFrame(data["teams"])
+    df = df.sort_values(by="accuracy", ascending=False).reset_index(drop=True)
+    df.insert(0, "Rank", range(1, len(df) + 1))
 
-    # 🔥 SORT BY ACCURACY (dynamic ranking)
-    df = df.sort_values(by="accuracy", ascending=False)
+    table_html, changed, alert_data = render_table(df)
 
-    df.insert(0, "Rank", range(1, len(df)+1))
+    with table_placeholder.container():
+        st.markdown(table_html, unsafe_allow_html=True)
 
-    with placeholder.container():
-        changed = render_table(df)
+    if changed:
+        st.session_state.alert_time = time.time()
+        st.session_state.last_alert = alert_data
 
+    if time.time() - st.session_state.alert_time < 3:
+        render_alert(alert_placeholder, st.session_state.last_alert)
+    else:
+        alert_placeholder.empty()
 
-    time.sleep(3)
+    time.sleep(1)
