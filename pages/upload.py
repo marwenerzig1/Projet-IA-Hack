@@ -1,7 +1,10 @@
 import streamlit as st
 import base64
 import json
+import subprocess
+import sys
 from pathlib import Path
+from datetime import datetime
 
 st.set_page_config(page_title="Upload Script", layout="wide")
 
@@ -27,6 +30,139 @@ def check_team_id(team_id: str, teams_data: dict):
         if team.get("team_id", "").strip() == team_id:
             return True, team.get("team_name", "Unknown Team")
     return False, None
+
+
+def sanitize_team_name(team_name: str) -> str:
+    return "".join(c if c.isalnum() or c in ("_", "-") else "_" for c in team_name.replace(" ", "_"))
+
+
+def run_team_script(script_path: Path, team_name: str):
+    safe_team_name = sanitize_team_name(team_name)
+
+    model_dir = Path("model") / safe_team_name
+    model_dir.mkdir(parents=True, exist_ok=True)
+
+    result_dir = Path("result")
+    result_dir.mkdir(parents=True, exist_ok=True)
+
+    result_path = result_dir / f"{safe_team_name}_result.json"
+
+    train_cmd = [
+        sys.executable,
+        str(script_path),
+        "train",
+        "uploads_csv/iris_train.csv",
+        str(model_dir),
+    ]
+
+    test_cmd = [
+        sys.executable,
+        str(script_path),
+        "test",
+        "uploads_csv/iris_test.csv",
+        str(model_dir),
+        str(result_path),
+    ]
+
+    train_proc = subprocess.run(
+        train_cmd,
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    test_proc = subprocess.run(
+        test_cmd,
+        capture_output=True,
+        text=True,
+        check=True
+    )
+
+    result_content = None
+    if result_path.exists():
+        result_content = result_path.read_text(encoding="utf-8")
+
+    return {
+        "train_stdout": train_proc.stdout,
+        "train_stderr": train_proc.stderr,
+        "test_stdout": test_proc.stdout,
+        "test_stderr": test_proc.stderr,
+        "result_path": str(result_path),
+        "result_content": result_content,
+    }
+
+
+def update_leaderboard(team_name: str, result_content: str):
+    leaderboard_path = Path("results.json")
+
+    team_result = json.loads(result_content)
+
+    if leaderboard_path.exists():
+        with open(leaderboard_path, "r", encoding="utf-8") as f:
+            leaderboard = json.load(f)
+    else:
+        leaderboard = {"teams": []}
+
+    teams = leaderboard.get("teams", [])
+
+    accuracy_raw = float(team_result.get("accuracy", 0))
+    precision_raw = float(team_result.get("precision", 0))
+    recall_raw = float(team_result.get("recall", 0))
+    f1_raw = float(team_result.get("f1_score", 0))
+
+    if accuracy_raw <= 1:
+        accuracy = accuracy_raw * 100
+    else:
+        accuracy = accuracy_raw
+
+    precision = precision_raw * 100 if precision_raw <= 1 else precision_raw
+    recall = recall_raw * 100 if recall_raw <= 1 else recall_raw
+    f1_score = f1_raw * 100 if f1_raw <= 1 else f1_raw
+
+    accuracy = min(max(accuracy, 0), 100)
+    precision = min(max(precision, 0), 100)
+    recall = min(max(recall, 0), 100)
+    f1_score = min(max(f1_score, 0), 100)
+
+    accuracy = round(accuracy, 2)
+    precision = round(precision, 2)
+    recall = round(recall, 2)
+    f1_score = round(f1_score, 2)
+
+    score = round((accuracy + precision + recall + f1_score) / 4, 2)
+
+    old_team = next((t for t in teams if t.get("name") == team_name), None)
+
+    if old_team is not None:
+        old_score = float(old_team.get("score", 0))
+
+        if score <= old_score:
+            return False, old_score, score
+
+        teams = [t for t in teams if t.get("name") != team_name]
+
+    teams.append({
+        "name": team_name,
+        "accuracy": accuracy,
+        "precision": precision,
+        "recall": recall,
+        "f1_score": f1_score,
+        "score": score,
+        "last_update": datetime.now().strftime("%Y-%m-%d %H:%M")
+    })
+
+    teams = sorted(
+        teams,
+        key=lambda x: (x.get("score", 0), x.get("accuracy", 0)),
+        reverse=True
+    )
+
+    leaderboard["teams"] = teams
+
+    with open(leaderboard_path, "w", encoding="utf-8") as f:
+        json.dump(leaderboard, f, indent=2)
+
+    return True, None, score
 
 
 # ---------------- STYLE ----------------
@@ -360,7 +496,6 @@ with center_col:
         )
 
         if uploaded_file is not None:
-
             st.info(f"Fichier sélectionné : {uploaded_file.name}")
 
             v1, gap11, bc, gap22, v3 = st.columns([1, 0.15, 1, 0.15, 1])
@@ -371,10 +506,8 @@ with center_col:
             if confirm:
                 save_dir = Path("uploads")
 
-                safe_team_name = team_name.replace(" ", "_")
+                safe_team_name = sanitize_team_name(team_name)
                 team_dir = save_dir / safe_team_name
-
-                # create team folder
                 team_dir.mkdir(parents=True, exist_ok=True)
 
                 save_path = team_dir / uploaded_file.name
@@ -382,7 +515,56 @@ with center_col:
                 with open(save_path, "wb") as f:
                     f.write(uploaded_file.getbuffer())
 
-    st.success(f"Fichier enregistré : {save_path}")
+                st.success(f"Fichier enregistré : {save_path}")
+
+                try:
+                    with st.spinner("Exécution du script en cours..."):
+                        run_output = run_team_script(save_path, team_name)
+
+                    st.success("Train + test exécutés avec succès.")
+
+                    if run_output["result_content"]:
+                        st.subheader("Résultat JSON")
+                        st.code(run_output["result_content"], language="json")
+
+                        updated, old_score, new_score = update_leaderboard(team_name, run_output["result_content"])
+
+                        if updated:
+                            st.success(f"Leaderboard mis à jour ✅ | New score: {new_score}%")
+                        else:
+                            st.warning(
+                                f"Résultat non mis à jour. Old score: {old_score}% | New score: {new_score}%"
+                            )
+                    else:
+                        st.warning("Résultat non trouvé après exécution.")
+
+                    if run_output["train_stdout"]:
+                        with st.expander("Train stdout"):
+                            st.code(run_output["train_stdout"])
+
+                    if run_output["test_stdout"]:
+                        with st.expander("Test stdout"):
+                            st.code(run_output["test_stdout"])
+
+                    if run_output["train_stderr"]:
+                        with st.expander("Train stderr"):
+                            st.code(run_output["train_stderr"])
+
+                    if run_output["test_stderr"]:
+                        with st.expander("Test stderr"):
+                            st.code(run_output["test_stderr"])
+
+                except subprocess.CalledProcessError as e:
+                    st.error("Erreur pendant l'exécution du script.")
+                    if e.stdout:
+                        with st.expander("stdout"):
+                            st.code(e.stdout)
+                    if e.stderr:
+                        with st.expander("stderr"):
+                            st.code(e.stderr)
+                except Exception as e:
+                    st.error(f"Erreur inattendue : {e}")
+
     b1, gap1, b2, gap2, b3 = st.columns([1, 0.15, 1, 0.15, 1])
 
     with b1:

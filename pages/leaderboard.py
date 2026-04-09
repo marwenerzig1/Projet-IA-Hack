@@ -4,7 +4,7 @@ import pandas as pd
 import time
 import base64
 
-st.set_page_config(page_title="Leaderboard IA", layout="wide")
+st.set_page_config(page_title="Classement IA", layout="wide")
 
 # ---------------- SESSION MEMORY ----------------
 if "previous_ranks" not in st.session_state:
@@ -194,7 +194,7 @@ def set_bg(image_file):
 set_bg("background3.png")
 
 # ---------------- TITLE ----------------
-st.markdown('<div class="title">LEADERBOARD</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">CLASSEMENT</div>', unsafe_allow_html=True)
 
 # ---------------- LOAD LOGOS ONCE ----------------
 logo1 = get_base64("logo1.png")
@@ -218,8 +218,8 @@ def render_alert(alert_placeholder, alert_data):
     old_rank = alert_data["old_rank"]
     new_rank = alert_data["new_rank"]
 
-    main_text = f" {name} MOVED UP!" if direction == "up" else f" {name} MOVED DOWN!"
-    sub_text = f"Rank {old_rank} → {new_rank}"
+    main_text = f"{name} MONTE !" if direction == "up" else f"{name} DESCEND !"
+    sub_text = f"Rang {old_rank} → {new_rank}"
 
     alert_placeholder.markdown(f"""
     <div class="rank-alert-overlay">
@@ -287,7 +287,7 @@ def render_table(df):
 
 # ---------------- DATA ----------------
 def load_data():
-    with open("results.json", "r") as f:
+    with open("results.json", "r", encoding="utf-8") as f:
         return json.load(f)
 
 table_placeholder = st.empty()
@@ -297,7 +297,7 @@ alert_placeholder = st.empty()
 while True:
     data = load_data()
     df = pd.DataFrame(data["teams"])
-    df = df.sort_values(by="accuracy", ascending=False).reset_index(drop=True)
+    df = df.sort_values(by="score", ascending=False).reset_index(drop=True)
     df.insert(0, "Rank", range(1, len(df) + 1))
 
     table_html, changed, alert_data = render_table(df)

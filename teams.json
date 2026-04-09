@@ -1,16 +1,40 @@
 {
   "teams": [
     {
-      "team_name": "Team Alpha",
-      "team_id": "ALPHA2026"
+      "team_name": "Ahmed",
+      "team_id": "AHMED2026"
     },
     {
-      "team_name": "Team Beta",
-      "team_id": "BETA2026"
+      "team_name": "Marwen",
+      "team_id": "MARWEN2026"
     },
     {
-      "team_name": "Team Gamma",
-      "team_id": "GAMMA2026"
+      "team_name": "Oumeima",
+      "team_id": "OUMEIMA2026"
+    },
+    {
+      "team_name": "Karim",
+      "team_id": "KARIM2026"
+    },
+    {
+      "team_name": "Yasmine",
+      "team_id": "YASMINE2026"
+    },
+    {
+      "team_name": "Sami",
+      "team_id": "SAMI2026"
+    },
+    {
+      "team_name": "Nour",
+      "team_id": "NOUR2026"
+    },
+    {
+      "team_name": "Amine",
+      "team_id": "AMINE2026"
+    },
+    {
+      "team_name": "TestTeam",
+      "team_id": "TEST2026"
     }
   ]
 }
