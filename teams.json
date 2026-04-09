@@ -1,0 +1,16 @@
+{
+  "teams": [
+    {
+      "team_name": "Team Alpha",
+      "team_id": "ALPHA2026"
+    },
+    {
+      "team_name": "Team Beta",
+      "team_id": "BETA2026"
+    },
+    {
+      "team_name": "Team Gamma",
+      "team_id": "GAMMA2026"
+    }
+  ]
+}
