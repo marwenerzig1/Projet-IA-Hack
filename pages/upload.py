@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 
-st.set_page_config(page_title="Soumission de script", layout="wide")
+st.set_page_config(page_title="Upload Script", layout="wide")
 
 
 # ---------------- CONFIG ----------------
@@ -53,9 +53,10 @@ ALLOWED_PACKAGES = {
 }
 
 MAX_TIME_SECONDS = 900  # 15 minutes
+LOCK_MAX_AGE_SECONDS = MAX_TIME_SECONDS + 120  # 17 minutes max
+
 
 # ---------------- CHALLENGES ----------------
-# Tu peux ici mélanger CSV et dossiers
 CHALLENGES = {
     "iris": {
         "display_name": "Challenge CSV",
@@ -130,17 +131,21 @@ def get_private_requirements_path(team_name: str) -> Path:
     return Path("venvs") / safe_team_name / "installed_requirements.txt"
 
 
-def is_submission_running() -> bool:
-    return LOCK_FILE.exists()
+# ---------------- LOCK LOGIC ----------------
+def remove_submission_lock():
+    if LOCK_FILE.exists():
+        LOCK_FILE.unlink()
 
 
 def create_submission_lock(team_name: str, stage: str, challenge_name: str):
+    now = datetime.now()
     LOCK_FILE.write_text(
         json.dumps({
             "team_name": team_name,
             "challenge": challenge_name,
             "stage": stage,
-            "started_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            "started_at": now.strftime("%Y-%m-%d %H:%M:%S"),
+            "timestamp": now.timestamp()
         }, indent=2),
         encoding="utf-8"
     )
@@ -150,20 +155,63 @@ def update_submission_lock_stage(team_name: str, stage: str, challenge_name: str
     create_submission_lock(team_name, stage, challenge_name)
 
 
-def remove_submission_lock():
-    if LOCK_FILE.exists():
-        LOCK_FILE.unlink()
-
-
 def get_running_submission_info():
     if not LOCK_FILE.exists():
         return None
+
     try:
-        return json.loads(LOCK_FILE.read_text(encoding="utf-8"))
+        info = json.loads(LOCK_FILE.read_text(encoding="utf-8"))
+
+        ts = info.get("timestamp")
+        if ts is not None:
+            age_seconds = datetime.now().timestamp() - float(ts)
+            if age_seconds > LOCK_MAX_AGE_SECONDS:
+                remove_submission_lock()
+                return None
+
+        return info
     except Exception:
+        remove_submission_lock()
         return None
 
 
+def is_submission_running() -> bool:
+    return get_running_submission_info() is not None
+
+
+def lock_belongs_to_team(team_name: str, challenge_name: str) -> bool:
+    info = get_running_submission_info()
+    if not info:
+        return False
+
+    return (
+        info.get("team_name") == team_name and
+        info.get("challenge") == challenge_name
+    )
+
+
+def can_start_or_resume_submission(team_name: str, challenge_name: str):
+    info = get_running_submission_info()
+
+    if not info:
+        return True, None
+
+    if info.get("team_name") == team_name and info.get("challenge") == challenge_name:
+        return True, info
+
+    return False, info
+
+
+def release_lock_if_owner(team_name: str, challenge_name: str):
+    info = get_running_submission_info()
+    if not info:
+        return
+
+    if info.get("team_name") == team_name and info.get("challenge") == challenge_name:
+        remove_submission_lock()
+
+
+# ---------------- REQUIREMENTS UTILS ----------------
 def parse_requirement_line(line: str):
     line = line.strip()
     if not line or line.startswith("#"):
@@ -734,10 +782,10 @@ left_margin, center_col, right_margin = st.columns([1.1, 2.6, 1.1])
 
 with center_col:
     st.markdown('<div class="hero">', unsafe_allow_html=True)
-    st.markdown('<div class="main-title">Soumission de script</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">UPLOAD SCRIPT</div>', unsafe_allow_html=True)
 
     if challenge_from_url not in CHALLENGES:
-        st.error("Défi invalide ou absent dans l’URL.")
+        st.error("Challenge invalide ou absent dans l’URL.")
         st.info("Exemple : ?token=VOTRE_TOKEN&challenge=challenge_csv")
         st.stop()
 
@@ -745,7 +793,7 @@ with center_col:
     challenge_display_name = challenge_config["display_name"]
 
     st.markdown(
-        f'<div class="sub-title">Défi actif : {challenge_display_name}</div>',
+        f'<div class="sub-title">Challenge actif : {challenge_display_name}</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="card-title">Soumission sécurisée du script</div>', unsafe_allow_html=True)
@@ -772,12 +820,20 @@ with center_col:
             st.error("Token invalide ou non autorisé.")
 
     if running_info:
-        st.warning(
-            f"Une soumission est déjà en cours par l'équipe {running_info.get('team_name', 'Unknown')} "
-            f"| challenge : {running_info.get('challenge', 'unknown')} "
-            f"| étape : {running_info.get('stage', 'unknown')} "
-            f"| démarrée à {running_info.get('started_at', 'unknown')}."
-        )
+        if is_valid_team and lock_belongs_to_team(team_name, challenge_from_url):
+            st.info(
+                f"Reprise de votre soumission en cours | équipe : {running_info.get('team_name', 'Unknown')} "
+                f"| challenge : {running_info.get('challenge', 'unknown')} "
+                f"| étape : {running_info.get('stage', 'unknown')} "
+                f"| démarrée à {running_info.get('started_at', 'unknown')}."
+            )
+        else:
+            st.warning(
+                f"Une soumission est déjà en cours par l'équipe {running_info.get('team_name', 'Unknown')} "
+                f"| challenge : {running_info.get('challenge', 'unknown')} "
+                f"| étape : {running_info.get('stage', 'unknown')} "
+                f"| démarrée à {running_info.get('started_at', 'unknown')}."
+            )
 
     if is_valid_team:
         safe_team_name = sanitize_team_name(team_name)
@@ -785,12 +841,16 @@ with center_col:
         req_dir.mkdir(parents=True, exist_ok=True)
         req_path = req_dir / f"{safe_team_name}_requirements.txt"
 
-        st.markdown("### Étape 1 : Téléverser requirements.txt")
+        # restauration de l'état si refresh
+        if lock_belongs_to_team(team_name, challenge_from_url):
+            st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = True
+
+        st.markdown("### Étape 1 : Upload requirements.txt")
 
         shared_requirements_text = read_requirements_text(SHARED_REQUIREMENTS_FILE)
 
         requirements_file = st.file_uploader(
-            "Téléverser requirements.txt",
+            "Uploader requirements.txt",
             type=["txt"],
             key="requirements_upload",
             label_visibility="collapsed"
@@ -822,12 +882,13 @@ with center_col:
                     confirm_requirements = st.button("CONFIRMER REQUIREMENTS", use_container_width=True)
 
                 if confirm_requirements:
-                    if is_submission_running():
-                        running_info = get_running_submission_info()
+                    allowed, current_lock_info = can_start_or_resume_submission(team_name, challenge_from_url)
+
+                    if not allowed:
                         st.error(
                             f"Impossible de commencer maintenant. "
-                            f"Une soumission est déjà en cours par l'équipe {running_info.get('team_name', 'Unknown')} "
-                            f"à l'étape {running_info.get('stage', 'unknown')}."
+                            f"Une soumission est déjà en cours par l'équipe {current_lock_info.get('team_name', 'Unknown')} "
+                            f"à l'étape {current_lock_info.get('stage', 'unknown')}."
                         )
                         st.stop()
 
@@ -837,7 +898,10 @@ with center_col:
                     st.success(f"requirements.txt enregistré : {req_path}")
 
                     try:
-                        create_submission_lock(team_name, "setup_env", challenge_from_url)
+                        if not current_lock_info:
+                            create_submission_lock(team_name, "setup_env", challenge_from_url)
+                        else:
+                            update_submission_lock_stage(team_name, "setup_env", challenge_from_url)
 
                         if env_mode == "shared":
                             with st.spinner("Préparation du shared environment..."):
@@ -847,7 +911,7 @@ with center_col:
                             st.session_state[f"python_bin_{safe_team_name}_{challenge_from_url}"] = str(python_bin)
                             st.session_state[f"env_mode_{safe_team_name}_{challenge_from_url}"] = "shared"
 
-                            st.success("Shared environment prêt ")
+                            st.success("Shared environment prêt ✅")
 
                         else:
                             private_env_path = get_private_venv_path(team_name)
@@ -867,7 +931,7 @@ with center_col:
                                     "req_stderr": "",
                                 }
 
-                                st.success("Environnement privé existant réutilisé ")
+                                st.success("Environnement privé existant réutilisé ✅")
                             else:
                                 with st.spinner("Création ou mise à jour de l’environnement privé..."):
                                     setup_output = setup_env(private_env_path, req_path, recreate=True)
@@ -878,7 +942,7 @@ with center_col:
                                 st.session_state[f"python_bin_{safe_team_name}_{challenge_from_url}"] = str(python_bin)
                                 st.session_state[f"env_mode_{safe_team_name}_{challenge_from_url}"] = "private"
 
-                                st.success("Environnement privé prêt ")
+                                st.success("Environnement privé prêt ✅")
 
                         st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = True
 
@@ -901,11 +965,11 @@ with center_col:
                         st.info("Lock actif : tu peux maintenant passer à l’upload du script.")
 
                     except subprocess.TimeoutExpired:
-                        remove_submission_lock()
+                        release_lock_if_owner(team_name, challenge_from_url)
                         st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = False
                         st.error("Timeout pendant l'installation des dépendances (15 minutes max).")
                     except subprocess.CalledProcessError as e:
-                        remove_submission_lock()
+                        release_lock_if_owner(team_name, challenge_from_url)
                         st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = False
                         st.error("Erreur pendant la création de l’environnement ou l'installation des requirements.")
                         if e.stdout:
@@ -915,7 +979,7 @@ with center_col:
                             with st.expander("stderr"):
                                 st.code(e.stderr)
                     except Exception as e:
-                        remove_submission_lock()
+                        release_lock_if_owner(team_name, challenge_from_url)
                         st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = False
                         st.error(f"Erreur inattendue pendant le setup : {e}")
             else:
@@ -923,17 +987,20 @@ with center_col:
 
         env_mode_saved = st.session_state.get(f"env_mode_{safe_team_name}_{challenge_from_url}")
         python_bin_saved = st.session_state.get(f"python_bin_{safe_team_name}_{challenge_from_url}")
-        submission_locked = st.session_state.get(f"submission_locked_{safe_team_name}_{challenge_from_url}", False)
+        submission_locked = st.session_state.get(
+            f"submission_locked_{safe_team_name}_{challenge_from_url}",
+            False
+        ) or lock_belongs_to_team(team_name, challenge_from_url)
 
         if env_mode_saved == "shared" and python_bin_saved:
-            st.success("Cette équipe utilisera le shared environment ")
+            st.success("Cette équipe utilisera le shared environment ✅")
             st.info(f"Python utilisé : {python_bin_saved}")
         elif env_mode_saved == "private" and python_bin_saved:
-            st.success("Cette équipe utilisera un environnement privé ")
+            st.success("Cette équipe utilisera un environnement privé ✅")
             st.info(f"Python utilisé : {python_bin_saved}")
         elif is_private_venv_ready(team_name):
             current_python = get_venv_python_path(get_private_venv_path(team_name))
-            st.success("Environnement privé déjà prêt pour cette équipe ")
+            st.success("Environnement privé déjà prêt pour cette équipe ✅")
             st.info(f"Python utilisé : {current_python}")
 
         st.markdown("### Étape 2 : Upload du script Python")
@@ -969,16 +1036,16 @@ with center_col:
                     running_info = get_running_submission_info()
 
                     if not running_info:
-                        st.error("Aucun verrou actif trouvé. Recommence depuis CONFIRMER REQUIREMENTS.")
-                        st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = False
-                        st.stop()
-
-                    if running_info.get("team_name") != team_name:
+                        create_submission_lock(team_name, "run_script", challenge_from_url)
+                        running_info = get_running_submission_info()
+                    elif not lock_belongs_to_team(team_name, challenge_from_url):
                         st.error(
                             f"Impossible de lancer l'exécution maintenant. "
                             f"Une autre équipe est en cours : {running_info.get('team_name', 'Unknown')}."
                         )
                         st.stop()
+                    else:
+                        update_submission_lock_stage(team_name, "run_script", challenge_from_url)
 
                     save_dir = Path("uploads") / challenge_from_url
                     team_dir = save_dir / safe_team_name
@@ -992,8 +1059,6 @@ with center_col:
                     st.success(f"Fichier enregistré : {save_path}")
 
                     try:
-                        update_submission_lock_stage(team_name, "run_script", challenge_from_url)
-
                         with st.spinner("Exécution du script dans l’environnement sélectionné..."):
                             run_output = run_team_script(
                                 save_path,
@@ -1003,7 +1068,7 @@ with center_col:
                                 challenge_config
                             )
 
-                        st.success("Train + test exécutés avec succès ")
+                        st.success("Train + test exécutés avec succès ✅")
 
                         if run_output["result_content"]:
                             st.subheader("Résultat JSON")
@@ -1016,7 +1081,7 @@ with center_col:
                             )
 
                             if updated:
-                                st.success(f"Leaderboard mis à jour  | Nouveau score : {new_score}%")
+                                st.success(f"Leaderboard mis à jour ✅ | Nouveau score : {new_score}%")
                             else:
                                 st.warning(
                                     f"Résultat non mis à jour. Ancien score : {old_score}% | Nouveau score : {new_score}%"
@@ -1043,7 +1108,7 @@ with center_col:
                         st.error(f"Erreur inattendue : {e}")
                         clean_team_files(team_name, challenge_from_url)
                     finally:
-                        remove_submission_lock()
+                        release_lock_if_owner(team_name, challenge_from_url)
                         st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = False
 
                         if 'run_output' in locals():
