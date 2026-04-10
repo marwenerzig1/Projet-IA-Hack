@@ -5,7 +5,7 @@ import time
 import base64
 from pathlib import Path
 
-st.set_page_config(page_title="Classement IA", layout="wide")
+st.set_page_config(page_title="Classement", layout="wide")
 
 # ---------------- SESSION MEMORY ----------------
 if "previous_ranks_ch1" not in st.session_state:
@@ -24,8 +24,8 @@ if "alert_time" not in st.session_state:
 RESULTS_FILE_CH1 = "results_challenge_iris.json"
 RESULTS_FILE_CH2 = "results_challenge_audio.json"
 
-CHALLENGE_1_TITLE = "CHALLENGE IRIS"
-CHALLENGE_2_TITLE = "CHALLENGE AUDIO"
+CHALLENGE_1_TITLE = "Défi 1"
+CHALLENGE_2_TITLE = "Défi 2"
 
 # ---------------- UTILS ----------------
 def get_base64(image_file):
@@ -405,12 +405,20 @@ def render_alert(alert_placeholder, alert_data):
 # ---------------- TABLE ----------------
 def render_table(df, previous_ranks_key, challenge_label):
     columns_to_show = [col for col in df.columns if col not in ["f1_score", "last_update"]]
-
+    columns_map = {
+    "Rank": "Classement",
+    "name": "Nom",
+    "accuracy":"Exactitude",
+    "precision":"Précision",
+    "recall":"Rappel",
+    "score": "Score final",
+     }
     html = "<table class='custom-table'><thead><tr>"
 
     for col in columns_to_show:
-        html += f"<th>{col}</th>"
-    html += "</tr></thead><tbody>"
+    
+        display_col = columns_map.get(col, col)
+        html += f"<th>{display_col}</th>"
 
     rank_changed = False
     alert_data = None

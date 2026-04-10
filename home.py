@@ -1,7 +1,7 @@
 import streamlit as st
 import base64
 
-st.set_page_config(page_title="Hackathon IA", layout="wide")
+st.set_page_config(page_title="IA'HACK", layout="wide")
 
 
 # ---------------- UTILS ----------------
@@ -230,21 +230,18 @@ left_margin, center_col, right_margin = st.columns([1.2, 2.2, 1.2])
 
 with center_col:
     st.markdown('<div class="hero">', unsafe_allow_html=True)
-    st.markdown('<div class="title">HACKATHON IA</div>', unsafe_allow_html=True)
+    st.markdown("<div class='title'>IA'HACK</div>", unsafe_allow_html=True)
     st.markdown('<div class="welcome">Bienvenue</div>', unsafe_allow_html=True)
-    st.markdown(
-        '<div class="desc">Choisis la section que tu veux ouvrir. Tu peux aller vers la page de soumission des scripts ou directement consulter le leaderboard.</div>',
-        unsafe_allow_html=True,
-    )
+    
 
     b1, spacer, b2 = st.columns([1, 0.18, 1])
 
     with b1:
-        if st.button("UPLOAD SCRIPT", use_container_width=True):
+        if st.button("Soumettre un script", use_container_width=True):
             st.switch_page("pages/upload.py")
 
     with b2:
-        if st.button("LEADERBOARD", use_container_width=True):
+        if st.button("Classement", use_container_width=True):
             st.switch_page("pages/leaderboard.py")
 
     st.markdown('</div>', unsafe_allow_html=True)

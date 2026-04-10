@@ -8,7 +8,7 @@ from pathlib import Path
 from datetime import datetime
 import shutil
 
-st.set_page_config(page_title="Upload Script", layout="wide")
+st.set_page_config(page_title="Soumission de script", layout="wide")
 
 
 # ---------------- CONFIG ----------------
@@ -734,10 +734,10 @@ left_margin, center_col, right_margin = st.columns([1.1, 2.6, 1.1])
 
 with center_col:
     st.markdown('<div class="hero">', unsafe_allow_html=True)
-    st.markdown('<div class="main-title">UPLOAD SCRIPT</div>', unsafe_allow_html=True)
+    st.markdown('<div class="main-title">Soumission de script</div>', unsafe_allow_html=True)
 
     if challenge_from_url not in CHALLENGES:
-        st.error("Challenge invalide ou absent dans l’URL.")
+        st.error("Défi invalide ou absent dans l’URL.")
         st.info("Exemple : ?token=VOTRE_TOKEN&challenge=challenge_csv")
         st.stop()
 
@@ -745,7 +745,7 @@ with center_col:
     challenge_display_name = challenge_config["display_name"]
 
     st.markdown(
-        f'<div class="sub-title">Challenge actif : {challenge_display_name}</div>',
+        f'<div class="sub-title">Défi actif : {challenge_display_name}</div>',
         unsafe_allow_html=True,
     )
     st.markdown('<div class="card-title">Soumission sécurisée du script</div>', unsafe_allow_html=True)
@@ -785,12 +785,12 @@ with center_col:
         req_dir.mkdir(parents=True, exist_ok=True)
         req_path = req_dir / f"{safe_team_name}_requirements.txt"
 
-        st.markdown("### Étape 1 : Upload requirements.txt")
+        st.markdown("### Étape 1 : Téléverser requirements.txt")
 
         shared_requirements_text = read_requirements_text(SHARED_REQUIREMENTS_FILE)
 
         requirements_file = st.file_uploader(
-            "Uploader requirements.txt",
+            "Téléverser requirements.txt",
             type=["txt"],
             key="requirements_upload",
             label_visibility="collapsed"
@@ -847,7 +847,7 @@ with center_col:
                             st.session_state[f"python_bin_{safe_team_name}_{challenge_from_url}"] = str(python_bin)
                             st.session_state[f"env_mode_{safe_team_name}_{challenge_from_url}"] = "shared"
 
-                            st.success("Shared environment prêt ✅")
+                            st.success("Shared environment prêt ")
 
                         else:
                             private_env_path = get_private_venv_path(team_name)
@@ -867,7 +867,7 @@ with center_col:
                                     "req_stderr": "",
                                 }
 
-                                st.success("Environnement privé existant réutilisé ✅")
+                                st.success("Environnement privé existant réutilisé ")
                             else:
                                 with st.spinner("Création ou mise à jour de l’environnement privé..."):
                                     setup_output = setup_env(private_env_path, req_path, recreate=True)
@@ -878,7 +878,7 @@ with center_col:
                                 st.session_state[f"python_bin_{safe_team_name}_{challenge_from_url}"] = str(python_bin)
                                 st.session_state[f"env_mode_{safe_team_name}_{challenge_from_url}"] = "private"
 
-                                st.success("Environnement privé prêt ✅")
+                                st.success("Environnement privé prêt ")
 
                         st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = True
 
@@ -926,14 +926,14 @@ with center_col:
         submission_locked = st.session_state.get(f"submission_locked_{safe_team_name}_{challenge_from_url}", False)
 
         if env_mode_saved == "shared" and python_bin_saved:
-            st.success("Cette équipe utilisera le shared environment ✅")
+            st.success("Cette équipe utilisera le shared environment ")
             st.info(f"Python utilisé : {python_bin_saved}")
         elif env_mode_saved == "private" and python_bin_saved:
-            st.success("Cette équipe utilisera un environnement privé ✅")
+            st.success("Cette équipe utilisera un environnement privé ")
             st.info(f"Python utilisé : {python_bin_saved}")
         elif is_private_venv_ready(team_name):
             current_python = get_venv_python_path(get_private_venv_path(team_name))
-            st.success("Environnement privé déjà prêt pour cette équipe ✅")
+            st.success("Environnement privé déjà prêt pour cette équipe ")
             st.info(f"Python utilisé : {current_python}")
 
         st.markdown("### Étape 2 : Upload du script Python")
@@ -1003,7 +1003,7 @@ with center_col:
                                 challenge_config
                             )
 
-                        st.success("Train + test exécutés avec succès ✅")
+                        st.success("Train + test exécutés avec succès ")
 
                         if run_output["result_content"]:
                             st.subheader("Résultat JSON")
@@ -1016,7 +1016,7 @@ with center_col:
                             )
 
                             if updated:
-                                st.success(f"Leaderboard mis à jour ✅ | Nouveau score : {new_score}%")
+                                st.success(f"Leaderboard mis à jour  | Nouveau score : {new_score}%")
                             else:
                                 st.warning(
                                     f"Résultat non mis à jour. Ancien score : {old_score}% | Nouveau score : {new_score}%"
