@@ -2,3 +2,5 @@
 .venv/
 venv/
 env/
+shared_env/
+venvs/Gamma/
