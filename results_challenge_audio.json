@@ -47,20 +47,20 @@
     },
     {
       "name": "Beta",
-      "accuracy": 91.4,
+      "accuracy": 99.4,
       "precision": 87.2,
       "recall": 85.3,
       "f1_score": 86.2,
-      "score": 87.53,
+      "score": 99.53,
       "last_update": "2026-04-09 23:18"
     },
     {
       "name": "Omega",
-      "accuracy": 85.1,
+      "accuracy": 99.1,
       "precision": 80.9,
       "recall": 79.5,
       "f1_score": 80.1,
-      "score": 81.4,
+      "score":99.4,
       "last_update": "2026-04-09 23:24"
     }
   ]
