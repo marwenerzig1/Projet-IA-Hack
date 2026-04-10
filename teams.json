@@ -1,40 +1,39 @@
 {
   "teams": [
     {
+      "team_id": "TEAM001",
       "team_name": "Ahmed",
-      "team_id": "AHMED2026"
+      "token": "uP9mYx2QfK8nRaT3vL0dWg"
     },
     {
+      "team_id": "TEAM002",
       "team_name": "Marwen",
-      "team_id": "MARWEN2026"
+      "token": "C4xZn8LpQ2sVmK7aTy1eRw"
     },
     {
-      "team_name": "Oumeima",
-      "team_id": "OUMEIMA2026"
+      "team_id": "TEAM003",
+      "team_name": "Alpha",
+      "token": "7hK2LmQpX9sVaT4dRwZ8Ny"
     },
     {
-      "team_name": "Karim",
-      "team_id": "KARIM2026"
+      "team_id": "TEAM004",
+      "team_name": "Beta",
+      "token": "Zx8Qp1LmK4sT9vRaW2yNd3"
     },
     {
-      "team_name": "Yasmine",
-      "team_id": "YASMINE2026"
+      "team_id": "TEAM005",
+      "team_name": "Gamma",
+      "token": "Lm9QxT2Va8KpRw4sZyN1dE"
     },
     {
-      "team_name": "Sami",
-      "team_id": "SAMI2026"
+      "team_id": "TEAM006",
+      "team_name": "Delta",
+      "token": "Qw7LmP2xZa9T4vKsN1dRy8"
     },
     {
-      "team_name": "Nour",
-      "team_id": "NOUR2026"
-    },
-    {
-      "team_name": "Amine",
-      "team_id": "AMINE2026"
-    },
-    {
-      "team_name": "TestTeam",
-      "team_id": "TEST2026"
+      "team_id": "TEAM007",
+      "team_name": "Omega",
+      "token": "T4vK2LmQx9ZaP8sRw1NdEy"
     }
   ]
 }
