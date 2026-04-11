@@ -1,68 +1,54 @@
 {
   "teams": [
     {
-      "name": "Beta",
-      "accuracy": 100.0,
-      "precision": 100.0,
-      "recall": 100.0,
-      "f1_score": 100.0,
-      "score": 100.0,
-      "last_update": "2026-04-10 20:56"
+      "name": "Ocean",
+      "accuracy": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "diag_mean": 0.0,
+      "score": 0.0,
+      "last_update": "2026-04-11 01:30"
     },
     {
-      "name": "Delta",
-      "accuracy": 100.0,
-      "precision": 100.0,
-      "recall": 100.0,
-      "f1_score": 100.0,
-      "score": 100.0,
-      "last_update": "2026-04-10 21:07"
+      "name": "Deep",
+      "accuracy": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "diag_mean": 0.0,
+      "score": 0.0,
+      "last_update": "2026-04-11 01:30"
     },
     {
-      "name": "Ahmed",
-      "accuracy": 95.45,
-      "precision": 95.83,
-      "recall": 95.24,
-      "f1_score": 95.21,
-      "score": 95.43,
-      "last_update": "2026-04-09 22:58"
+      "name": "Dolphin",
+      "accuracy": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "diag_mean": 0.0,
+      "score": 0.0,
+      "last_update": "2026-04-11 01:30"
     },
     {
-      "name": "Gamma",
-      "accuracy": 95.45,
-      "precision": 95.83,
-      "recall": 95.24,
-      "f1_score": 95.21,
-      "score": 95.43,
-      "last_update": "2026-04-09 23:02"
+      "name": "Surf",
+      "accuracy": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "diag_mean": 0.0,
+      "score": 0.0,
+      "last_update": "2026-04-11 01:30"
     },
     {
-      "name": "Omega",
-      "accuracy": 95.25,
-      "precision": 95.17,
-      "recall": 93.4,
-      "f1_score": 94.15,
-      "diag_mean": 93.4,
-      "score": 94.27,
-      "last_update": "2026-04-11 00:36"
-    },
-    {
-      "name": "Marwen",
-      "accuracy": 95.2,
-      "precision": 92.0,
-      "recall": 90.1,
-      "f1_score": 91.0,
-      "score": 92.08,
-      "last_update": "2026-04-09 23:12"
-    },
-    {
-      "name": "Alpha",
-      "accuracy": 93.8,
-      "precision": 89.5,
-      "recall": 87.6,
-      "f1_score": 88.5,
-      "score": 89.85,
-      "last_update": "2026-04-09 23:15"
+      "name": "Sail",
+      "accuracy": 0.0,
+      "precision": 0.0,
+      "recall": 0.0,
+      "f1_score": 0.0,
+      "diag_mean": 0.0,
+      "score": 0.0,
+      "last_update": "2026-04-11 01:30"
     }
   ]
 }
