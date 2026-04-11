@@ -61,7 +61,7 @@ CHALLENGES = {
     "iris": {
         "display_name": "Challenge CSV",
         "train_input": "datasets/iris/iris_train.csv",
-        "test_input": "datasets/iris/test_comite.csv",
+        "test_input": "datasets/iris/iris_test_comite.csv",
         "leaderboard_file": "results_challenge_iris.json",
         "input_type": "csv",
     },
