@@ -63,7 +63,7 @@ CHALLENGES = {
         "input_type": "folder",
     },
     "gpscl": {
-        "display_name": "Défi de Classification Multi-classes des Comportements",
+        "display_name": "Classification Multi-classes des Comportements",
         "train_input": "datasets/defi2/train.csv",
         "test_input": "datasets/defi2/test.csv",
         "leaderboard_file": "results_challenge_defi2.json",
@@ -428,22 +428,21 @@ def update_leaderboard(team_name: str, result_content: str, leaderboard_file: st
     precision_raw = float(team_result.get("precision", 0))
     recall_raw = float(team_result.get("recall", 0))
     f1_raw = float(team_result.get("f1_score", 0))
-    balanced_raw = float(team_result.get("balanced_score", 0))
+    diag_mean = float(team_result.get("diag_mean", 0))
 
     accuracy = accuracy_raw * 100 if accuracy_raw <= 1 else accuracy_raw
     precision = precision_raw * 100 if precision_raw <= 1 else precision_raw
     recall = recall_raw * 100 if recall_raw <= 1 else recall_raw
     f1_score = f1_raw * 100 if f1_raw <= 1 else f1_raw
-    balanced_raw = balanced_raw * 100 if balanced_raw <= 1 else balanced_raw
+    diag_mean = diag_mean * 100 if diag_mean <= 1 else diag_mean
 
     accuracy = round(min(max(accuracy, 0), 100), 2)
     precision = round(min(max(precision, 0), 100), 2)
     recall = round(min(max(recall, 0), 100), 2)
     f1_score = round(min(max(f1_score, 0), 100), 2)
-    balanced_score = round(min(max(balanced_raw, 0), 100), 2)       
+    diag_mean = round(min(max(diag_mean, 0), 100), 2)       
 
-
-    score = round((accuracy + precision + recall + f1_score + balanced_score) / 5, 2)
+    score = round((accuracy + precision + recall + f1_score + diag_mean) / 5, 2)
 
     old_team = next((t for t in teams if t.get("name") == team_name), None)
     if old_team is not None:
@@ -458,7 +457,7 @@ def update_leaderboard(team_name: str, result_content: str, leaderboard_file: st
         "precision": precision,
         "recall": recall,
         "f1_score": f1_score,
-        "balanced_score": balanced_score,
+        "diag_mean": diag_mean,
         "score": score,
         "last_update": datetime.now().strftime("%Y-%m-%d %H:%M")
     })

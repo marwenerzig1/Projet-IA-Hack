@@ -37,6 +37,16 @@
       "last_update": "2026-04-09 23:02"
     },
     {
+      "name": "Omega",
+      "accuracy": 95.25,
+      "precision": 95.17,
+      "recall": 93.4,
+      "f1_score": 94.15,
+      "diag_mean": 93.4,
+      "score": 94.27,
+      "last_update": "2026-04-11 00:36"
+    },
+    {
       "name": "Marwen",
       "accuracy": 95.2,
       "precision": 92.0,
@@ -53,15 +63,6 @@
       "f1_score": 88.5,
       "score": 89.85,
       "last_update": "2026-04-09 23:15"
-    },
-    {
-      "name": "Omega",
-      "accuracy": 85.1,
-      "precision": 80.9,
-      "recall": 79.5,
-      "f1_score": 80.1,
-      "score": 81.4,
-      "last_update": "2026-04-09 23:24"
     }
   ]
 }

@@ -21,11 +21,11 @@ if "alert_time" not in st.session_state:
     st.session_state.alert_time = 0
 
 # ---------------- FILES ----------------
-RESULTS_FILE_CH1 = "results_challenge_iris.json"
-RESULTS_FILE_CH2 = "results_challenge_audio.json"
+RESULTS_FILE_CH1 = "results_challenge_defi1.json"
+RESULTS_FILE_CH2 = "results_challenge_defi2.json"
 
-CHALLENGE_1_TITLE = "Défi 1"
-CHALLENGE_2_TITLE = "Défi 2"
+CHALLENGE_1_TITLE = "Classification Audio Marine"
+CHALLENGE_2_TITLE = "Classification Multi-classes des Comportements"
 
 # ---------------- UTILS ----------------
 def get_base64(image_file):
