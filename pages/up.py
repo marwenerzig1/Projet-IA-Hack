@@ -64,8 +64,8 @@ CHALLENGES = {
     },
     "gpscl": {
         "display_name": "Classification Multi-classes des Comportements",
-        "train_input": "datasets/defi2/train.csv",
-        "test_input": "datasets/defi2/test.csv",
+        "train_input": "datasets/Defi2/train.csv",
+        "test_input": "datasets/Defi2/test.csv",
         "leaderboard_file": "results_challenge_defi2.json",
         "input_type": "csv",
     },

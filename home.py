@@ -404,7 +404,7 @@ def render_alert(alert_placeholder, alert_data):
 
 # ---------------- TABLE ----------------
 def render_table(df, previous_ranks_key, challenge_label):
-    columns_to_show = [col for col in df.columns if col not in ["f1_score", "last_update"]]
+    columns_to_show = [col for col in df.columns if col not in ["f1_score", "last_update", "diag_mean"]]
     columns_map = {
     "Rank": "Classement",
     "name": "Nom",
