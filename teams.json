@@ -2,38 +2,58 @@
   "teams": [
     {
       "team_id": "TEAM001",
-      "team_name": "Ahmed",
-      "token": "uP9mYx2QfK8nRaT3vL0dWg"
+      "team_name": "Ocean",
+      "token": "Oc3anK9xP2"
     },
     {
       "team_id": "TEAM002",
-      "team_name": "Marwen",
-      "token": "C4xZn8LpQ2sVmK7aTy1eRw"
+      "team_name": "Deep",
+      "token": "DeeP7mL4Q1"
     },
     {
       "team_id": "TEAM003",
-      "team_name": "Alpha",
-      "token": "7hK2LmQpX9sVaT4dRwZ8Ny"
+      "team_name": "Wave",
+      "token": "WavE5xT9K3"
     },
     {
       "team_id": "TEAM004",
-      "team_name": "Beta",
-      "token": "Zx8Qp1LmK4sT9vRaW2yNd3"
+      "team_name": "Tide",
+      "token": "TidE8pQ2M6"
     },
     {
       "team_id": "TEAM005",
-      "team_name": "Gamma",
-      "token": "Lm9QxT2Va8KpRw4sZyN1dE"
+      "team_name": "Coral",
+      "token": "Cor4lX7nP5"
     },
     {
       "team_id": "TEAM006",
-      "team_name": "Delta",
-      "token": "Qw7LmP2xZa9T4vKsN1dRy8"
+      "team_name": "Blue",
+      "token": "BluE3kR8T1"
     },
     {
       "team_id": "TEAM007",
-      "team_name": "Omega",
-      "token": "T4vK2LmQx9ZaP8sRw1NdEy"
+      "team_name": "Aqua",
+      "token": "Aqu4P6xL9N"
+    },
+    {
+      "team_id": "TEAM008",
+      "team_name": "Dolphin",
+      "token": "DolP8vQ3X2"
+    },
+    {
+      "team_id": "TEAM009",
+      "team_name": "Shark",
+      "token": "ShaR5mK7T4"
+    },
+    {
+      "team_id": "TEAM010",
+      "team_name": "Surf",
+      "token": "SurF2xN8P6"
+    },
+    {
+      "team_id": "TEAM011",
+      "team_name": "Sail",
+      "token": "SaiL9Q3M7X"
     }
   ]
 }
