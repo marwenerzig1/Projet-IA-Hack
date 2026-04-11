@@ -212,7 +212,8 @@ def release_lock_if_owner(team_name: str, challenge_name: str):
 
 
 def cancel_submission_if_owner(team_name: str, challenge_name: str):
-    if lock_belongs_to_team(team_name, challenge_name):
+    stage = get_lock_stage_for_team(team_name, challenge_name)
+    if stage in ("setup_env", "script_uploaded"):
         release_lock_if_owner(team_name, challenge_name)
         clean_team_files(team_name, challenge_name)
         return True
@@ -865,8 +866,8 @@ with center_col:
 
         current_team_lock_stage = get_lock_stage_for_team(team_name, challenge_from_url)
 
-        if current_team_lock_stage == "setup_env":
-            st.warning("Vous avez une soumission en cours à l'étape setup_env pour ce challenge.")
+        if current_team_lock_stage in ("setup_env", "script_uploaded"):
+            st.warning(f"Vous avez une soumission en cours à l'étape {current_team_lock_stage} pour ce challenge.")
 
             c_cancel_1, c_cancel_2, c_cancel_3 = st.columns([1, 1, 1])
             with c_cancel_2:
@@ -1076,7 +1077,7 @@ with center_col:
                     running_info = get_running_submission_info()
 
                     if not running_info:
-                        create_submission_lock(team_name, "run_script", challenge_from_url)
+                        create_submission_lock(team_name, "script_uploaded", challenge_from_url)
                         running_info = get_running_submission_info()
                     elif not lock_belongs_to_team(team_name, challenge_from_url):
                         st.error(
@@ -1085,7 +1086,7 @@ with center_col:
                         )
                         st.stop()
                     else:
-                        update_submission_lock_stage(team_name, "run_script", challenge_from_url)
+                        update_submission_lock_stage(team_name, "script_uploaded", challenge_from_url)
 
                     save_dir = Path("uploads") / challenge_from_url
                     team_dir = save_dir / safe_team_name
@@ -1099,6 +1100,8 @@ with center_col:
                     st.success(f"Fichier enregistré : {save_path}")
 
                     try:
+                        update_submission_lock_stage(team_name, "run_script", challenge_from_url)
+
                         with st.spinner("Exécution du script dans l’environnement sélectionné..."):
                             run_output = run_team_script(
                                 save_path,
