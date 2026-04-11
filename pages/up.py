@@ -25,9 +25,6 @@ FORBIDDEN_PACKAGES = {
     "ultralytics",
     "opencv-python",
     "opencv-contrib-python",
-    "xgboost",
-    "lightgbm",
-    "catboost",
     "transformers",
     "sentence-transformers",
     "pytorch-lightning",
@@ -58,19 +55,19 @@ LOCK_MAX_AGE_SECONDS = MAX_TIME_SECONDS + 120
 
 # ---------------- CHALLENGES ----------------
 CHALLENGES = {
-    "iris": {
-        "display_name": "Challenge CSV",
-        "train_input": "datasets/iris/iris_train.csv",
-        "test_input": "datasets/iris/iris_test.csv",
-        "leaderboard_file": "results_challenge_iris.json",
-        "input_type": "csv",
-    },
-    "challenge_audio": {
-        "display_name": "Challenge Audio",
-        "train_input": "datasets/challenge_audio/train_audio",
-        "test_input": "datasets/challenge_audio/test_audio",
-        "leaderboard_file": "results_challenge_audio.json",
+    "audiocl": {
+        "display_name": "Classification Audio Marine",
+        "train_input": "datasets/Defi1/train",
+        "test_input": "datasets/Defi1/test",
+        "leaderboard_file": "results_challenge_defi1.json",
         "input_type": "folder",
+    },
+    "gpscl": {
+        "display_name": "Défi de Classification Multi-classes des Comportements",
+        "train_input": "datasets/defi2/train.csv",
+        "test_input": "datasets/defi2/test.csv",
+        "leaderboard_file": "results_challenge_defi2.json",
+        "input_type": "csv",
     },
 }
 
@@ -241,7 +238,6 @@ def parse_requirements_text(text: str):
             packages.append(parsed)
     return packages
 
-
 def validate_requirements_text(text: str):
     parsed = parse_requirements_text(text)
 
@@ -249,15 +245,14 @@ def validate_requirements_text(text: str):
         return False, "Le requirements.txt est vide ou invalide.", [], []
 
     found_names = [p["name"] for p in parsed]
+
+    #  Check uniquement les packages interdits
     forbidden_found = sorted({name for name in found_names if name in FORBIDDEN_PACKAGES})
     if forbidden_found:
         return False, f"Packages interdits détectés : {', '.join(forbidden_found)}", parsed, forbidden_found
 
-    unauthorized = sorted({name for name in found_names if name not in ALLOWED_PACKAGES})
-    if unauthorized:
-        return False, f"Packages non autorisés détectés : {', '.join(unauthorized)}", parsed, unauthorized
-
-    return True, "Requirements autorisés.", parsed, []
+    #  Tout le reste est autorisé
+    return True, "Requirements valides (aucun package interdit).", parsed, []
 
 
 def normalize_requirements_text(text: str):
@@ -433,18 +428,22 @@ def update_leaderboard(team_name: str, result_content: str, leaderboard_file: st
     precision_raw = float(team_result.get("precision", 0))
     recall_raw = float(team_result.get("recall", 0))
     f1_raw = float(team_result.get("f1_score", 0))
+    balanced_raw = float(team_result.get("balanced_score", 0))
 
     accuracy = accuracy_raw * 100 if accuracy_raw <= 1 else accuracy_raw
     precision = precision_raw * 100 if precision_raw <= 1 else precision_raw
     recall = recall_raw * 100 if recall_raw <= 1 else recall_raw
     f1_score = f1_raw * 100 if f1_raw <= 1 else f1_raw
+    balanced_raw = balanced_raw * 100 if balanced_raw <= 1 else balanced_raw
 
     accuracy = round(min(max(accuracy, 0), 100), 2)
     precision = round(min(max(precision, 0), 100), 2)
     recall = round(min(max(recall, 0), 100), 2)
     f1_score = round(min(max(f1_score, 0), 100), 2)
+    balanced_score = round(min(max(balanced_raw, 0), 100), 2)       
 
-    score = round((accuracy + precision + recall + f1_score) / 4, 2)
+
+    score = round((accuracy + precision + recall + f1_score + balanced_score) / 5, 2)
 
     old_team = next((t for t in teams if t.get("name") == team_name), None)
     if old_team is not None:
@@ -459,6 +458,7 @@ def update_leaderboard(team_name: str, result_content: str, leaderboard_file: st
         "precision": precision,
         "recall": recall,
         "f1_score": f1_score,
+        "balanced_score": balanced_score,
         "score": score,
         "last_update": datetime.now().strftime("%Y-%m-%d %H:%M")
     })

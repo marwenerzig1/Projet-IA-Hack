@@ -1,7 +1,12 @@
-pandas
 numpy
-scikit-learn
-joblib
+pandas
 scipy
+scikit-learn
+xgboost
 librosa
 soundfile
+streamlit
+joblib
+tqdm
+lightgbm
+catboost

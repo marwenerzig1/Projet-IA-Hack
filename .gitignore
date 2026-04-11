@@ -4,3 +4,4 @@ venv/
 env/
 shared_env/
 venvs/Gamma/
+datasets/ # Exclude datasets if they are too large or contain sensitive data
