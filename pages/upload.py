@@ -211,6 +211,25 @@ def release_lock_if_owner(team_name: str, challenge_name: str):
         remove_submission_lock()
 
 
+def cancel_submission_if_owner(team_name: str, challenge_name: str):
+    if lock_belongs_to_team(team_name, challenge_name):
+        release_lock_if_owner(team_name, challenge_name)
+        clean_team_files(team_name, challenge_name)
+        return True
+    return False
+
+
+def get_lock_stage_for_team(team_name: str, challenge_name: str):
+    info = get_running_submission_info()
+    if not info:
+        return None
+
+    if info.get("team_name") == team_name and info.get("challenge") == challenge_name:
+        return info.get("stage")
+
+    return None
+
+
 # ---------------- REQUIREMENTS UTILS ----------------
 def parse_requirement_line(line: str):
     line = line.strip()
@@ -841,9 +860,30 @@ with center_col:
         req_dir.mkdir(parents=True, exist_ok=True)
         req_path = req_dir / f"{safe_team_name}_requirements.txt"
 
-        # restauration de l'état si refresh
         if lock_belongs_to_team(team_name, challenge_from_url):
             st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = True
+
+        current_team_lock_stage = get_lock_stage_for_team(team_name, challenge_from_url)
+
+        if current_team_lock_stage == "setup_env":
+            st.warning("Vous avez une soumission en cours à l'étape setup_env pour ce challenge.")
+
+            c_cancel_1, c_cancel_2, c_cancel_3 = st.columns([1, 1, 1])
+            with c_cancel_2:
+                cancel_btn = st.button("ANNULER MA SOUMISSION", use_container_width=True)
+
+            if cancel_btn:
+                cancelled = cancel_submission_if_owner(team_name, challenge_from_url)
+                if cancelled:
+                    st.session_state[f"submission_locked_{safe_team_name}_{challenge_from_url}"] = False
+                    st.session_state.pop(f"python_bin_{safe_team_name}_{challenge_from_url}", None)
+                    st.session_state.pop(f"env_mode_{safe_team_name}_{challenge_from_url}", None)
+                    st.success("Votre lock a été libéré. Vous pouvez recommencer la soumission.")
+                    st.rerun()
+                else:
+                    st.error("Impossible d'annuler cette soumission.")
+        elif current_team_lock_stage == "run_script":
+            st.info("Votre soumission est en cours d'exécution. L'annulation est désactivée pendant run_script.")
 
         st.markdown("### Étape 1 : Upload requirements.txt")
 
